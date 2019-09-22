@@ -155,7 +155,7 @@
 					hashobj["publicID"] = output.publicID
 					updateTable(hashobj.publicID, 7)
 
-					var voteurl = "csjb.cc/" + hashobj.publicID
+					var voteurl = "csjb.cc/" + output.display
 					// console.log(encodeURI(voteurl))
 
 					$("#code").attr("src", "https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=" + encodeURI(voteurl))

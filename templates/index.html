@@ -12,7 +12,7 @@
 		var id = {{init_id|safe}}
 		var spotify_url = "https://accounts.spotify.com/authorize?client_id=e098696a1beb48fb9db404c76148a2f7&redirect_uri=https%3A%2F%2Fwww.crowdsourcejukebox.com%2Flisten%2F&scope=user-read-playback-state%20streaming%20user-modify-playback-state%20user-read-private%20user-read-email&response_type=token&state="
 		$(document).ready(function(){
-			$("#sessionID").html(id.publicID)
+			$("#sessionID").html(id.display)
 			$("#auth").attr("href", spotify_url + id.privateID)
 
 			$(".option").click(function(){
@@ -28,7 +28,7 @@
 				var data = {req:"newID", oldID: id.privateID}
 				$.post(url, data , function(data, status){
 						id = data
-						$("#sessionID").html(data.publicID)
+						$("#sessionID").html(data.display)
 						$("#auth").attr("href", spotify_url + id.privateID)
 				});
 			});

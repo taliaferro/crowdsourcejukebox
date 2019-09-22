@@ -85,6 +85,7 @@ def newID():
     killtime = datetime.datetime.now() + datetime.timedelta(minutes=inactive_timeout)
 
     toinsert = {}
+    toinsert["display"] = adj1.capitalize() + noun.capitalize()
     toinsert["publicID"] = ID
     toinsert["privateID"] = str(uuid.uuid4())
     toinsert["_id"] = toinsert["privateID"]
@@ -153,7 +154,7 @@ def voteredir():
 
 @app.route("/vote/<string:publicID>/")
 def vote(publicID):
-    # return "LEIF ERIKSEN"
+    publicID = publicID.lower();
     now = int(time.time())
     if(publicID == "vote"):
         return redirect("https://www.crowdsourcejukebox.com/")
@@ -200,6 +201,7 @@ def vote(publicID):
 
 @app.route("/submit/<string:publicID>/")
 def search(publicID):
+    publicID = publicID.lower();
     now = int(time.time())
     session_info = session_db.find_one({"publicID": publicID},{"_id":0})
     if session_info is None:
@@ -279,7 +281,8 @@ def api():
         session_db.update_one({"publicID": form["publicID"]}, {"$set":{"lastaccessed": now, "lastread":now}})
     if form["req"] == "public":
         session_db.update_one({"privateID": form["privateID"]}, {"$set":{"lastaccessed": now, "lastread":now}})
-        return_obj = {"publicID": session_db.find_one({"privateID": form["privateID"]})["publicID"]}
+        info = session_db.find_one({"privateID": form["privateID"]})
+        return_obj = {"publicID": info["publicID"], "display": info["display"]}
     if(form["req"] == "vote"):
         guestID = form["guestID"]
         session_info = session_db.find_one({"publicID": form['publicID']},{"_id":0})
