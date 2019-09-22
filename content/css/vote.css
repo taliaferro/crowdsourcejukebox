@@ -51,18 +51,24 @@ h2{
 #submit{
   display: block;
   position: fixed;
-  width: 100vw;
+  width: 20vmin;
+  height: 20vmin;
   text-align: center;
   /* margin: auto; */
-  bottom: 0;
-  right: 0;
+  bottom: 5vmin;
+  right: 5vmin;
   background-color: #e3ac10;
-  font-size: 7vh;
-  line-height: 1;
-  padding: 4px;
+  /* padding: 4px; */
   padding-top: 0px;
   padding-bottom: 15px;
+
+  border-radius: 15px;
+}
+
+#submit i{
   color: #282828;
+  line-height: 1.75;
+  font-size: 12vmin;
 }
 
 .cover{
