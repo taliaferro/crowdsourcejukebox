@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<meta charset="UTF-8">
+
+<head>
+	<title>Crowdsource Jukebox</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+	<link href="https://www.crowdsourcejukebox.com/content/css/index_v2.css" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css?family=Red+Hat+Text:400,400i,500,700&display=swap&subset=latin-ext" rel="stylesheet">
+	<script>
+		var id = {{init_id|safe}}
+		var spotify_url = "https://accounts.spotify.com/authorize?client_id=e098696a1beb48fb9db404c76148a2f7&redirect_uri=https%3A%2F%2Fwww.crowdsourcejukebox.com%2Flisten%2F&scope=user-read-playback-state%20streaming%20user-modify-playback-state%20user-read-private%20user-read-email&response_type=token&state="
+		$(document).ready(function(){
+			$("#sessionID").html(id.publicID)
+			$("#auth").attr("href", spotify_url + id.privateID)
+
+			$(".option").click(function(){
+				$(this).find(".switch").toggleClass("left").toggleClass("right")
+			});
+
+			setInterval(function(){
+				$("#reroll").click();
+			}, 285000);
+
+			$("#reroll").click(function(){
+				var url = "https://www.crowdsourcejukebox.com/api/"
+				var data = {req:"newID", oldID: id.privateID}
+				$.post(url, data , function(data, status){
+						id = data
+						$("#sessionID").html(data.publicID)
+						$("#auth").attr("href", spotify_url + id.privateID)
+				});
+			});
+		});
+	</script>
+</head>
+<body>
+	<div id = 'content'>
+		<div id="logo_container">
+			<img id = "logo" src="https://www.crowdsourcejukebox.com/content/images/lockupcolor.png">
+		</div>
+		<div id="controls">
+			<div id="control_box">
+				<h1>your party name is:</h1>
+				<span id="reroll"><span id="sessionID">initsessid</span>⟲</span>
+				<br>
+				<br>
+				<h1>log in with Spotify:</h1>
+				<a id="auth" style="text-decoration: inherit;">start the party</a>
+			</div>
+		</div>
+		<div id="byline">
+			<h2 style="font-style: italic">built by James Taliaferro</h2><h3><a href="https://github.com/JamesTaliaferro/crowdsourcejukebox">fork on GitHub</a></h3>
+		</div>
+	</div>
+</body>
+</html>

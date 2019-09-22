@@ -1,0 +1,184 @@
+*{
+  margin: 0;
+  padding: 0;
+  font-family: Red Hat Text;
+}
+body{
+  text-align: center;
+  background-color: darkgray;
+  background-image: url(https://www.crowdsourcejukebox.com/content/images/concert.jpeg);
+  background-position: top center;
+  /* background-repeat:norepeat; */
+  overflow-x: hidden;
+  /* background-repeat: no-repeat; */
+  background-attachment: fixed;
+}
+a{
+  color: inherit;
+  text-decoration: inherit;
+}
+
+h2{
+  color: white;
+}
+
+#logo{
+  max-height: 90%;
+  max-width: 80vw;
+}
+
+#topbar{
+  position: fixed;
+  top: 0;
+  height: 10vh;
+  background-color: #282828;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  max-width: 100%;
+}
+
+#results{
+  margin-left: 15px;
+  margin-top: 12vh;
+  margin-bottom: 10vh;
+}
+
+#submit{
+  display: block;
+  position: fixed;
+  width: 100vw;
+  text-align: center;
+  /* margin: auto; */
+  bottom: 0;
+  right: 0;
+  background-color: #282828;
+  /* font-size: 7vh;
+  line-height: 1; */
+  padding: 4px;
+  padding-top: 0px;
+  padding-bottom: 15px;
+}
+
+.cover{
+  width: 200px;
+  height: 200px;
+}
+
+.covercell{
+  width: 200px;
+}
+
+#results{
+  margin-left: 10px;
+  width: 100%;
+}
+#results table{
+  width: 100%;
+  border-spacing: 0 30px;
+  border-collapse: separate;
+}
+#results tr{
+  background-color: rgba(40,40,40,0.7);
+  width: 100%;
+}
+.trackcell{
+  padding: 20px;
+  overflow-x: hidden;
+  text-align: left;
+}
+.title{
+  font-weight: 500;
+  font-size: 3em;
+}
+.artist{
+  font-size: 2.5em;
+  font-weight: 400;
+  font-style: italic;
+}
+.title, .artist{
+  line-height: 1;
+  float: left;
+  clear: both;
+  color: white;
+}
+
+#searchbar{
+  padding: 5px;
+  font-size: 4.75em;
+  margin: auto;
+  margin-top: 10px;
+  width: 95%;
+}
+
+#blocker{
+  margin:0px;
+  background-color: rgba(0,0,0,0.6);
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* display: none; */
+}
+
+#confirmation_window{
+  width: 87vmin;
+  text-align: center;
+  height: 87vmin;
+  /* padding: 50px; */
+  background-color: #202020;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-around;
+}
+
+#submit_header{
+  font-size: 7vmin;
+  font-weight: 400;
+}
+
+#conf_cover{
+  /* margin-top: 75px; */
+  width: 50%;
+}
+#conf_title, #conf_artist{
+  font-size: 7vmin;
+  font-weight: 400;
+  line-height: 1;
+}
+
+#conf_artist{
+  font-style: italic;
+}
+#buttons{
+  width: 100%;
+  /* background-color: red; */
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-around;
+  font-size: 7vmin;
+}
+#button_no{
+  border: 4px solid #e3ac10;
+  color: white;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+#button_yes{
+  border: 4px solid #e3ac10;
+  background-color: #e3ac10;
+  padding-left: 15px;
+  padding-right: 15px;
+}

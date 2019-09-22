@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<meta charset="UTF-8">
+
+<head>
+	<title>Crowdsource Jukebox</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+	<script src="https://sdk.scdn.co/spotify-player.js"></script>
+
+	<link href="https://www.crowdsourcejukebox.com/content/css/player.css" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css?family=Red+Hat+Text:400,400i,500,700&display=swap&subset=latin-ext" rel="stylesheet">
+
+	<script>
+		var hashlist = window.location.hash.split("&")
+		var hashobj = {}
+		hashlist.forEach(function(kv){
+			hashobj[kv.split("=")[0].replace("#", "")] = kv.split("=")[1]
+		});
+
+		var session = {};
+
+		function playSong(uri){
+			console.log("Playing " + uri)
+			$.ajax({
+				url: "https://api.spotify.com/v1/me/player/play?device_id=" + hashobj["device_id"],
+				type: "PUT",
+				data: '{"uris": ["'+ uri + '"]}',
+				beforeSend: function(xhr){xhr.setRequestHeader('Authorization', 'Bearer ' + hashobj.access_token );},
+				success: function(data, status) {
+					updateTable(hashobj.publicID, 7);
+				}
+			});
+		}
+
+		function getList(id, number){
+			var url = "https://www.crowdsourcejukebox.com/api/"
+			var data = {req:"setlist", publicID: id, "number": number}
+			$.post(url, data , function(output, status){
+					playlist = output;
+			});
+		}
+
+		function playNext(){
+			var url = "https://www.crowdsourcejukebox.com/api/"
+			var data = {req:"playnext", privateID: hashobj.state}
+			$.post(url, data , function(output, status){
+					playSong(output.uri)
+			});
+		}
+
+		function updateTable(id, number){
+			var url = "https://www.crowdsourcejukebox.com/api/"
+			var data = {req:"setlist", publicID: id, "number": number}
+			$.post(url, data , function(output, status){
+				// console.log(output);
+				if(output.length == 0){
+					$("#setlist_table").hide();
+					return
+				}
+				ids = output.map(x => x.uri.substring(14)).join(",")
+				$.ajax({
+					url: "https://api.spotify.com/v1/tracks/?ids=" + ids,
+					type: "GET",
+					beforeSend: function(xhr){xhr.setRequestHeader('Authorization', 'Bearer ' + hashobj.access_token );},
+					success: function(object) {
+						tracks = object;
+						var newtable = "<tr><td></td><td><h2 style='float: left; font-weight: 500;'>up next:</h2></td></tr>";
+						object.tracks.forEach(function(element){
+							newtable += "<tr class = 'track'>"
+
+							newtable += "<td class='covericon-cell'>"
+							newtable += "<img class='covericon' src='" + element.album.images[2].url + "'>"
+							newtable += "</td>"
+
+							newtable += "<td class='trackinfo'><span>"
+							newtable += "<span class='trackinfo-title'>"+element.name+"</span><br>"
+							newtable += "<span class='trackinfo-artist'>"+element.artists[0].name+"</span>"
+							newtable += "</td>"
+
+							newtable += "</tr>"
+							$("#setlist_table").html(newtable);
+							$("#setlist_table").show();
+							return
+						});
+					}
+				});
+			});
+		}
+
+		function popup(message, img){
+			$("#settings_box").hide()
+			$(".cssload-container").hide();
+			$("#blocker-icon").attr("src", "https://www.crowdsourcejukebox.com/content/images/" + img + ".png");
+			$("#blocker_text").html(message);
+			$("#blocker-icon").show();
+			$("#blocker_text").show();
+			$("#blocker").show();
+		}
+
+		window.onSpotifyWebPlaybackSDKReady = () => {
+		  // const token = 'BQAzhkYUQBr3uWLzxPj_DMq8FtSAuhqlhXzseFj1N6hxkhKjZhvCC2LX4CLz4x2mcTGG0KeCAZgi6rbQ7oQksMYMRpjxXAPzBOda1qlmqQa0Denr7lBzQjJQUp31NMsFk_TX3LNu3Oc0_D_6HvzQAlohmQLfe3dgln_oYJgO2aRdb3uLPhPZ51i5Ew';
+			const token = hashobj.access_token
+		  const player = new Spotify.Player({
+		    name: 'Crowdsource Jukebox',
+		    getOAuthToken: cb => { cb(token); }
+		  });
+
+		  // Error handling
+		  player.addListener('initialization_error', ({ message }) => {
+				console.error(message);
+				popup("Initialization Error<br>Try running in Firefox,<br>or reloading the page.", "fermata");
+			});
+		  player.addListener('authentication_error', ({ message }) => {
+				console.error(message);
+				popup("Authentication Error<br>please go back to <a style='text-decoration: underline;' href='https://www.crowdsourcejukebox.com'>the homepage</a><br>to re-authenticate.", "segno");
+				var spotify_auth = "https://accounts.spotify.com/authorize?client_id=e098696a1beb48fb9db404c76148a2f7&redirect_uri=https:%2F%2Fcrowdsourcejukebox.com%2Flisten%2F&scope=user-read-playback-state%20streaming%20user-modify-playback-state%20user-read-private%20user-read-email&response_type=token&state=" + hashobj.state
+				window.location.replace(spotify_auth);
+			});
+		  player.addListener('account_error', ({ message }) => {
+				console.error(message);
+				popup("Account error<br>We're not really sure what's going on.<br>This is probably Spotify's problem.", "fine")
+			});
+		  player.addListener('playback_error', ({ message }) => {
+				console.error(message);
+				popup("Playback Error<br>Please reload the page, that might help.", "fermata");
+			});
+
+		  // Playback status updates
+		  player.addListener('player_state_changed', state => {
+				console.log(state);
+				hashobj.playerstate = state
+				var now_playing = state.track_window.current_track
+				console.log(now_playing.album.images);
+				$("#cover").attr("src", now_playing.album.images[2].url);
+				var name = now_playing.name
+				if(name.length>20){
+					name = name.substring(0, 20).trim() + "..."
+				}
+
+				$("#trackname").html(name);
+				$("#artist").html(now_playing.artists[0].name)
+			});
+
+		  // Ready
+		  player.addListener('ready', ({ device_id }) => {
+				hashobj["device_id"] = device_id
+				$("#blocker").hide()
+				$(".cssload-container").hide()
+				console.log("ready");
+				playNext()
+				var url = "https://www.crowdsourcejukebox.com/api/"
+				var data = {req:"public", privateID: hashobj.state}
+				$.post(url, data , function(output, status){
+					hashobj["publicID"] = output.publicID
+					updateTable(hashobj.publicID, 7)
+
+					var voteurl = "csjb.cc/" + hashobj.publicID
+					// console.log(encodeURI(voteurl))
+
+					$("#code").attr("src", "https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=" + encodeURI(voteurl))
+					$("#voteurl").html(voteurl)
+				});
+				setInterval(function(){
+					var url = "https://www.crowdsourcejukebox.com/api/"
+					var data = {req:"updates", publicID: hashobj.publicID}
+					player.getCurrentState().then(state => {
+						// console.log(state);
+					  if (!state || (state.position == 0 && state.paused)) {
+							console.log("next track!")
+							playNext();
+					  }
+						$.post(url, data , function(output, status){
+							if(output.update){
+								updateTable(hashobj.publicID, 7)
+							}
+						});
+					});
+
+
+				}, 5000);
+
+				$("#roll").click(function(){
+					// console.log("button");
+					playNext();
+				});
+		    console.log('Ready with Device ID', device_id);
+		  });
+
+		  // Not Ready
+		  player.addListener('not_ready', ({ device_id }) => {
+		    console.log('Device ID has gone offline', device_id);
+		  });
+
+		  // Connect to the player!
+		  player.connect();
+		};
+
+
+		$(document).ready(function(){
+			$(".option").click(function(){
+				$(this).find(".switch").toggleClass("left").toggleClass("right")
+			});
+			// $("#settings_button").click(function(){
+			// 	$("#blocker_text").hide()
+			// 	$("#settings-box").show()
+			// 	$("#blocker").show()
+			// });
+			// $("#save_settings").click(function(){
+			// 	console.log("saved");
+			// 	$("#settings_box").hide()
+			// 	$("#blocker").hide()
+			// });
+		});
+
+
+	</script>
+
+</head>
+<body>
+	<div id="ui_container">
+		<div id = 'content'>
+				<div id="md_window">
+					<img id="cover" src="https://www.crowdsourcejukebox.com/content/images/rest.png"><br>
+					<span id="trackname">Nothing playing</span><br>
+					<span id="artist">Suggest some songs!</span><br>
+					<span class="button" id="roll">skip ►</span>
+				</div>
+		</div>
+		<div id="setlist">
+			<img id="logo" src="https://www.crowdsourcejukebox.com/content/images/lockupcolor.png">
+			<!-- <h2>Up Next:</h2> -->
+			<table id="setlist_table">
+			</table>
+		</div>
+		<div id="vote">
+			<div id="vote_window">
+				<img id="code" src=""><br>
+				<h2 class="vote_header">what do you want to hear next?</h2>
+				<h2 class="vote_header"id="voteurl"></h2>
+				<!-- <h2 class="button" id="settings_button">Settings</h2> -->
+			</div>
+		</div>
+	</div>
+	<div id="blocker">
+		<div id="blocker-contents">
+			<img id="blocker-icon" src="https://www.crowdsourcejukebox.com/content/images/fermata.png">
+			<div class="cssload-container">
+				<div class="cssload-shaft1"></div>
+				<div class="cssload-shaft2"></div>
+				<div class="cssload-shaft3"></div>
+				<div class="cssload-shaft4"></div>
+				<div class="cssload-shaft5"></div>
+				<div class="cssload-shaft6"></div>
+				<div class="cssload-shaft7"></div>
+				<div class="cssload-shaft8"></div>
+				<div class="cssload-shaft9"></div>
+				<div class="cssload-shaft10"></div>
+			</div>
+			<h2 id="blocker_text">Loading Web Player</h2>
+			<!-- <div style="display: none" id="settings-box">
+				<table id="settings">
+					<tr><td colspan="3"><h2>Settings</h2></td></tr>
+					<tr><td class="settingname" colspan="3">Block explicit songs</td></tr>
+					<tr class="option"><td class="option left">Off</td><td class="switch track left"><div class="switch slider left"></div></td><td class="option right">On</td></tr>
+					<tr><td class="settingname" colspan="3">Require Captcha to vote</td></tr>
+					<tr class="option"><td class="option left">Off</td><td class="switch track left"><div class="switch slider left"></div></td><td class="option right">On</td></tr>
+					<tr><td class="settingname" colspan="3">Vote imagecode</td></tr>
+					<tr class="option"><td class="option left">QR code</td><td class="switch track left"><div class="switch slider left"></div></td><td class="option right">Snapcode</td></tr>
+					<tr><td class="settingname" colspan="3">Upvote threhold to play</td></tr>
+					<tr><td colspan="3"><input placeholder="1" style="color: black; width: 25%;" type="text"></td></tr>
+					<tr><td colspan="3"><div id="save_settings" class="button">Save</div></td></tr>
+				</table>
+			</div> -->
+		</div>
+	</div>
+</body>
+</html>

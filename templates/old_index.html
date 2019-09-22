@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+
+<meta charset="UTF-8">
+
+<head>
+	<title>Crowdsource Jukebox</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+	<link href="https://www.crowdsourcejukebox.com/content/css/index.css" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css?family=Red+Hat+Text:400,400i,500,700&display=swap&subset=latin-ext" rel="stylesheet">
+	<script>
+		var id = {{init_id|safe}}
+		var spotify_url = "https://accounts.spotify.com/authorize?client_id=e098696a1beb48fb9db404c76148a2f7&redirect_uri=https%3A%2F%2Fwww.crowdsourcejukebox.com%2Flisten%2F&scope=user-read-playback-state%20streaming%20user-modify-playback-state%20user-read-private%20user-read-email&response_type=token&state="
+		$(document).ready(function(){
+			$("#sessionID").html(id.publicID)
+			$("#auth").attr("href", spotify_url + id.privateID)
+
+			$(".option").click(function(){
+				$(this).find(".switch").toggleClass("left").toggleClass("right")
+			});
+
+			setInterval(function(){
+				$("#reroll").click();
+			}, 285000);
+
+			$("#reroll").click(function(){
+				var url = "https://www.crowdsourcejukebox.com/api/"
+				var data = {req:"newID", oldID: id.privateID}
+				$.post(url, data , function(data, status){
+						id = data
+						$("#sessionID").html(data.publicID)
+						$("#auth").attr("href", spotify_url + id.privateID)
+				});
+			});
+		});
+	</script>
+</head>
+<body>
+	<div id = 'content'>
+			<img id = "logo" src="https://www.crowdsourcejukebox.com/content/images/lockupcolor.png">
+			<div id="interaction">
+				<div id="leftbox">
+					<a id="auth"><h2><div class="button" id="start">start the party<br>with Spotify</div><h2></a>
+				</div>
+
+				<div style="width: 4px; background-color: white; height: 100%;"></div>
+
+				<div id="rightbox">
+					<h2>my party name:<br><span id="sessionID">{{init_id.publicID}}</span></h2>
+					<h2 class="button" id="reroll">get another</span></h2>
+				</div>
+			</div>
+			<div id="settings_container">
+				<table id="settings">
+					<tr><td id="settings_header" colspan="3"><h2>settings</h2></td></tr>
+					<tr><td class="settingname" colspan="3">block explicit songs</td></tr>
+					<tr class="option"><td class="option left">Off</td><td class="switch track left"><div class="switch slider left"></div></td><td class="option right">On</td></tr>
+					<tr><td class="settingname" colspan="3">require Captcha to vote</td></tr>
+					<tr class="option"><td class="option left">Off</td><td class="switch track left"><div class="switch slider left"></div></td><td class="option right">On</td></tr>
+				</table>
+			</div>
+			<span style="align-self: flex-end; font-weight: 400; font-style: italic; color: white;">Built by James Taliaferro</span>
+	</div>
+</body>
+</html>

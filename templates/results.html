@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+
+<meta charset="UTF-8">
+
+<head>
+	<title>Crowdsource Jukebox</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+	<link href="https://www.crowdsourcejukebox.com/content/css/results.css" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css?family=Red+Hat+Text:400,400i,500,700&display=swap&subset=latin-ext" rel="stylesheet">
+	<script>
+		function pushtrack(track){
+			var url = "https://www.crowdsourcejukebox.com/api/"
+
+			var value = "; " + document.cookie;
+  		var parts = value.split("; " + "{{publicID}}-guest" + "=");
+			console.log(parts);
+  		if (parts.length == 2) cookie = parts.pop().split(";").shift();
+
+			var data = {req:"submit", publicID: "{{publicID}}", guestID: cookie, uri: track}
+			$.post(url, data , function(data, status){
+				window.location.replace("https://www.crowdsourcejukebox.com/vote/{{publicID}}")
+			});
+		}
+		$(document).ready(function(){
+			// $("#blocker").hide()
+			$("tr").click(function(){
+				$("#conf_cover").attr("src", $(this).find(".cover").attr("src"));
+				$("#conf_title").html($(this).find(".title").html())
+				$("#conf_artist").html($(this).find(".artist").html())
+				$("#button_yes").attr("data-track", $(this).attr("data-track"))
+				$("#blocker").fadeIn()
+			});
+
+			$("#blocker").click(function(){
+				$("#blocker").hide()
+			}).children().on('click', function (ev) {
+    		ev.stopPropagation();
+			});
+
+			$("#button_no").click(function(){
+				$("#blocker").hide()
+			});
+
+			$("#button_yes").click(function(){
+				console.log("clicked");
+				pushtrack($(this).attr("data-track"))
+			});
+
+			$("#searchbar").on("focus", function(){
+				$(this).attr("placeholder", "search again...")
+			});
+		});
+	</script>
+</head>
+<body>
+	<div id="topbar">
+		<img id = "logo" src="https://www.crowdsourcejukebox.com/content/images/wordmarkwhite.png">
+	</div>
+	<div id="results">
+		<table>
+			{% for track in tracks %}
+			<tr data-track = {{track.uri}}>
+				<td class="covercell"><img class="cover" src="{{track.image}}"></td>
+				<td class="trackcell">
+					<span class="title">{{track.name}}</span><br>
+					<span class="artist">{{track.artist}}</span>
+				</td>
+			</tr>
+			{% endfor %}
+		</table>
+	</div>
+	<div id="submit">
+		<form method="get">
+			<input id="searchbar" name="query" placeholder="{{prev_query}}" type="search">
+		</form>
+	</div>
+	<div id="blocker" style="display: none;">
+		<div id="confirmation_window">
+			<h2 id="submit_header">Submit this song?</h2>
+			<div style="width: 100%;">
+				<img id="conf_cover">
+				<h2 id="conf_title"></h2>
+				<h2 id="conf_artist"></h2>
+			</div>
+			<div id="buttons">
+				<div id="button_no">pick another</div><div id="button_yes">submit!</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

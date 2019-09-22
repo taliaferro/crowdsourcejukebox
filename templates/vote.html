@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<meta charset="UTF-8">
+
+<head>
+	<title>Crowdsource Jukebox</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+	<link href="https://www.crowdsourcejukebox.com/content/css/vote.css" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css?family=Red+Hat+Text:400,400i,500,700&display=swap&subset=latin-ext" rel="stylesheet">
+	<script>
+		function pushvote(track, dir){
+			var url = "https://www.crowdsourcejukebox.com/api/"
+
+			var value = "; " + document.cookie;
+  		var parts = value.split("; " + "{{publicID}}-guest" + "=");
+  		if (parts.length == 2) cookie = parts.pop().split(";").shift();
+
+			var data = {req:"vote", direction: dir, publicID: "{{publicID}}", guestID: cookie, uri: track}
+			$.post(url, data , function(data, status){
+			});
+		}
+
+		function up(vote){
+			$(vote).parent().removeClass("neutral").removeClass("down").addClass("up")
+			$(vote).unbind("click").click(function(){neutral(this)})
+			down_arrow = $(vote).parent().find(".arrow_down")
+			down_arrow.unbind("click").click(function(){down(down_arrow)})
+
+			count = $(vote).parent().find(".count")
+			$(count).html(Number(count.attr("data-votes"))+1)
+			pushvote($(vote).attr("data-track"), "up")
+		}
+		function down(vote){
+			$(vote).parent().removeClass("neutral").removeClass("up").addClass("down")
+			$(vote).unbind("click").click(function(){neutral(this)})
+			up_arrow = $(vote).parent().find(".arrow_up")
+			up_arrow.unbind("click").click(function(){up(this)})
+
+			count = $(vote).parent().find(".count")
+			$(count).html(Number(count.attr("data-votes"))-1)
+
+			pushvote($(vote).attr("data-track"), "down")
+			//
+			// pushvote($(vote).attr("data-track"), "down")
+			//
+			// if($(vote).hasClass("on")){
+			// 	$(count).html(Number(count.attr("data-votes"))-1)
+			// }
+			// else{
+			// 	$(count).html(Number(count.attr("data-votes")))
+			// }
+		}
+		function neutral(vote){
+			$(vote).parent().removeClass("up").removeClass("down").addClass("neutral")
+			console.log($(vote).parent().find(".arrow_up"));
+			up_arrow = $(vote).parent().find(".arrow_up")
+			down_arrow = $(vote).parent().find(".arrow_down")
+			up_arrow.unbind("click").click(function(){up(this)})
+			down_arrow.unbind("click").click(function(){down(this)})
+
+			count = $(vote).parent().find(".count")
+			$(count).html(Number(count.attr("data-votes")))
+			pushvote($(vote).attr("data-track"), "neutral")
+		}
+
+		$(document).ready(function(){
+			$(".neutral .arrow_up").click(function(){up(this)});
+			$(".neutral .arrow_down").click(function(){down(this)});
+			$(".up .arrow_up").click(function(){neutral(this)});
+			$(".up .arrow_down").click(function(){down(this)});
+			$(".down .arrow_down").click(function(){neutral(this)});
+			$(".down .arrow_up").click(function(){up(this)});
+
+			$(".up .count").each(function(){$(this).attr("data-votes",Number($(this).attr("data-votes"))-1)})
+			$(".down .count").each(function(){$(this).attr("data-votes",Number($(this).attr("data-votes"))+1)})
+			 // $(".up .count").each(function(){console.log("LEIF ERIKSEN");})
+		});
+	</script>
+</head>
+<body>
+	<div id="topbar">
+		<img id = "logo" src="https://www.crowdsourcejukebox.com/content/images/wordmarkwhite.png">
+	</div>
+	<div id="setlist">
+		<table>
+			{% for track in tracks %}
+			<tr>
+				<td class="covercell"><img class="cover" src="{{track.image}}"></td>
+				<td class="trackcell">
+					<span class="title">{{track.name}}</span><br>
+					<span class="artist">{{track.artist}}</span>
+				</td>
+				<td class="votescell {{track.vote}}">
+					<!-- {{track.vote}} -->
+					<a class="vote arrow_up" data-track="{{track.uri}}">▲</a>
+					<span data-votes="{{track.upvotes}}" class="count">{{track.upvotes}}</span>
+					<a class="vote arrow_down" data-track="{{track.uri}}">▼</a>&nbsp&nbsp
+				</td>
+			</tr>
+			{% endfor %}
+		</table>
+	</div>
+	<a href="https://www.crowdsourcejukebox.com/submit/{{publicID}}"><div id="submit">submit a song</div></a>
+</body>
+</html>
