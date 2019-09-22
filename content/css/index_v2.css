@@ -65,9 +65,14 @@ a{
   padding-left: 8px;
   padding-right: 8px;
   color: #282828;
-
+  border-radius: 5px;
   background-color: #e3ac10;
 }
+
+#reroll i, #auth i{
+    color: #282828;
+}
+
 #reroll span{
   color: #282828;
   padding-right: 8px;

@@ -122,9 +122,9 @@ h2{
   color: white;
 }
 
-.votescell.up .arrow_up{
+.votescell.up .arrow_up i{
   color: #e3ac10;
 }
-.votescell.down .arrow_down{
+.votescell.down .arrow_down i{
   color: #2aa198;
 }
