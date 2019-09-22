@@ -215,10 +215,12 @@ def search(publicID):
             abort(401)
 
     query = request.query_string.decode("UTF-8")
-    if(query != ""):
+    if(query != "" and "query=" in query):
         query = query[query.index('query='):]
         query = query[query.index('=')+1:]
         query = query if "&" not in query else query[:query.index("&")]
+        if(query == ""):
+            return render_template("search.html", publicID=publicID)
         query = urllib.parse.unquote_plus(query)
         results = sp.search(query, limit=20)["tracks"]["items"]
         tracks = [{"uri": result["uri"],

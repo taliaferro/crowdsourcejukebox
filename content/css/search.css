@@ -51,7 +51,31 @@ h2{
   justify-content: center;
 }
 
+.searchcontainer{
+  display: flex;
+}
+
+button{
+  cursor: pointer;
+  padding-left: 8px;
+  padding-right: 8px;
+  border-radius: 5px;
+  background-color: #e3ac10;
+  border: none;
+}
+button span, button i{
+  font-size: 3.25em;
+
+  color: #282828;
+
+
+}
+.searchcontainer:focus{
+  border: none;
+}
+
 #searchbar{
   padding: 5px;
   font-size: 3.25em;
+  flex: 1;
 }
