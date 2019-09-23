@@ -169,6 +169,7 @@ def vote(publicID):
     hancock = Signer(str(secret_key), salt=str(session_info['privateID']))
 
     if(publicID + "-guest") not in request.cookies:
+        # print(session_info["settings"], file=sys.stderr)
         if(session_info['settings']["captcha"]):
             return redirect("https://www.crowdsourcejukebox.com/captcha/"+publicID+"/")
         else:
@@ -205,7 +206,9 @@ def search(publicID):
         if(query == ""):
             return render_template("search.html", publicID=publicID)
         query = urllib.parse.unquote_plus(query)
-        results = sp.search(query, limit=20)["tracks"]["items"]
+        results = sp.search(query, limit=35)["tracks"]["items"]
+        if(session_info["settings"]["noexplicit"]):
+            results = [x for x in results if not x["explicit"]]
         tracks = [{"uri": result["uri"],
                    "image": result["album"]["images"][0]["url"],
                    "name": result["name"],
@@ -326,7 +329,7 @@ def api():
         entry = setlist_db[publicID].find_one({"played": 0, "uri": uri})
         entry["upvoters"] = [] if "upvoters" not in entry.keys() else entry["upvoters"]
         entry["downvoters"] = [] if "downvoters" not in entry.keys() else entry["downvoters"]
-        print(guestID)
+        # print(guestID)
         if direction == "up":
             if guestID in entry["downvoters"]:
                 entry["downvoters"].remove(guestID)
@@ -348,8 +351,8 @@ def api():
                 entry["downvoters"].remove(guestID)
 
         entry["upvotes"] = len(entry["upvoters"]) - len(entry["downvoters"])
-        print(entry["upvoters"])
-        print(entry["downvoters"])
+        # print(entry["upvoters"])
+        # print(entry["downvoters"])
         setlist_db[publicID].update_one({"_id": entry["_id"]}, {"$set":entry})
         session_db.update_one({"publicID": form["publicID"]}, {"$set":{"lastaccessed": now, "lastmodified":now}})
 
@@ -379,11 +382,12 @@ def api():
         # session_db.update_one({"publicID": publicID}, {"$set":{"lastaccessed": now, "lastmodified":now}})
 
     if(form["req"] == "settings"):
-        print(str(form), file=sys.stderr)
+        # print(str(form), file=sys.stderr)
         session_info = session_db.find_one({"privateID": form['privateID']},{"_id":0})
         if(session_info is None):
             abort(404)
-        settings = {"noexplicit": form["noexplicit"],"songlimit": form["songlimit"],"voteoff": form["voteoff"],"captcha": form["captcha"],}
+        settings = {"noexplicit": form["noexplicit"] == "true","songlimit": form["songlimit"]== "true","voteoff": form["voteoff"]== "true","captcha": form["captcha"]== "true",}
+        print(settings, file=sys.stderr)
         session_db.update_one({"privateID": form["privateID"]}, {"$set":{"lastaccessed": now, "lastmodified":now, "settings": settings}})
         return_obj = session_db.find_one({"privateID": form['privateID']},{"_id":0})
         # return_obj.pop("_id")
@@ -395,7 +399,6 @@ def api():
         to_insert = sp.user_playlist(form["user"], form["uri"])['tracks']['items']
         to_insert = [{"uri": x['track']['uri'], "upvotes": 0, "submitted_by": "fallback", "upvoters":[], "downvoters":[], "played": 0} for x in to_insert]
         return_obj = to_insert
-        # print(str(to_insert), file=sys.stderr)
         setlist_db[session_info['publicID']].insert_many(to_insert)
         session_db.update_one({"privateID": form["privateID"]}, {"$set":{"lastaccessed": now, "lastmodified":now}})
 
