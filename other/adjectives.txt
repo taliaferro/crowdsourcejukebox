@@ -7,7 +7,6 @@ kaput
 busy
 puffy
 hard
-fat
 vast
 cool
 wary
@@ -19,7 +18,6 @@ slow
 brave
 odd
 blue
-ugly
 sour
 loose
 dry
@@ -35,7 +33,6 @@ calm
 tacky
 minor
 flat
-hurt
 long
 warm
 known
@@ -151,7 +148,6 @@ lowly
 acrid
 aback
 damp
-erect
 early
 empty
 easy

@@ -43,8 +43,8 @@ a{
 }
 
 #logo{
-  max-width: 80%;
-  max-height: 80%;
+  max-width: 65%;
+  max-height: 65%;
 }
 
 #controls{
@@ -69,17 +69,63 @@ a{
   background-color: #e3ac10;
 }
 
-#reroll i, #auth i{
-    color: #282828;
-}
-
 #reroll span{
   color: #282828;
   padding-right: 8px;
 }
 
-
 #byline{
   height: 8 auto                                                                                                        %;
   text-align: center;
+}
+
+#reroll i, #auth i{
+    color: #282828;
+}
+
+.fast-spin {
+  -webkit-animation: spin-counter .3s infinite linear;
+  -moz-animation: spin-counter .3s infinite linear;
+  -o-animation: spin-counter .3s infinite linear;
+  animation: spin-counter .3s infinite linear;
+}
+@-moz-keyframes spin-counter {
+  0% {
+    -moz-transform: rotate(359deg);
+  }
+  100% {
+    -moz-transform: rotate(0deg);
+  }
+}
+@-webkit-keyframes spin-counter {
+  0% {
+    -webkit-transform: rotate(359deg);
+  }
+  100% {
+    -webkit-transform: rotate(0deg);
+  }
+}
+@-o-keyframes spin-counter {
+  0% {
+    -o-transform: rotate(359deg);
+  }
+  100% {
+    -o-transform: rotate(0deg);
+  }
+}
+@-ms-keyframes spin-counter {
+  0% {
+    -ms-transform: rotate(359deg);
+  }
+  100% {
+    -ms-transform: rotate(0deg);
+  }
+}
+@keyframes spin-counter {
+  0% {
+    transform: rotate(359deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
 }

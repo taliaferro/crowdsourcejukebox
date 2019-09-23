@@ -6,6 +6,7 @@
 }
 body{
   text-align: center;
+  background-color: #333;
   background-image: url(https://www.crowdsourcejukebox.com/content/images/concert.jpeg);
   background-position: center;
   background-repeat:norepeat;
@@ -50,6 +51,7 @@ a{
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
+  overflow-x: hidden;
 }
 #content{
   /* background-color: red; */
@@ -90,6 +92,7 @@ a{
   user-select: none;
   font-weight: 500;
   width: 75%;
+  border-radius: 8px;
 }
 
 .button:hover{
@@ -115,6 +118,7 @@ a{
   color: white;
   font-size: 32px;
   font-weight: 500;
+  max-width: 100%;
 }
 
 #artist, #np{
@@ -129,6 +133,8 @@ h2{
 }
 #setlist_table{
   margin: auto;
+  max-height: 75%;
+  overflow-y: scroll;
 }
 
 #setlist_table td{
@@ -168,27 +174,115 @@ h2{
 }
 
 #settings_box{
+  /* height: 70vh;
+  width: 70vw; */
+  padding: 5%;
+  padding: 5%;
+  background-color: #282828;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  border-radius: 15px;
 }
+
+#settings_box h2{
+  font-weight: 500;
+  /* font-style: italic; */
+}
+
+#switch_pane, #fallback_pane{
+  height: 100%;
+  width: 100%;
+  clear: right;
+  /* border: 2px solid red; */
+  text-align: left;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+#fallback_pane table{
+  border-collapse: collapse;
+}
+
+#fallback_pane .covericon{
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+#fallback_pane .track{
+  border-top: 1px solid #AAA;
+}
+
+.result:hover{
+  cursor: pointer;
+  background-color: #444;
+}
+
+.result.selected{
+    background-color: #e3ac10;
+}
+.result.selected .trackinfo-title{
+    color: #282828;
+}
+
+#fallback_pane.track:first-child{
+  border-top:none;
+}
+
+#fallback_search{
+  margin-bottom: 10px;
+  color: #000;
+}
+#fallback_pane ::placeholder{
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.switch_container{
+  text-align: right;
+  padding-top: 5px;
+  padding-bottom: 5px;
+
+}
+
+#switch_pane td{
+  margin: auto;
+}
+
+#switch_pane tr{
+  border-top: 2px solid #AAAAAA;
+}
+
+#switch_pane table tr:first-child{
+  border: none;
+}
+
+#switch_pane table{
+  width: 100%;
+  border-collapse: collapse;
+  /* border: 2px solid #e3ac10; */
+  margin: auto;
+}
+
 
 .settingname{
   padding-top: 5px;
   border-top: 1px solid white;
 }
 
-.switch.label.left{
-  float: right;
-}
-.switch.label.right{
+
+.switch.label{
   float: left;
+  font-size: 24px;
+  white-space: nowrap;
+  padding-right: 30px;
 }
 
 .switch.track{
-  width: 40px;
-  border-radius: 10px;
+  width: 64px;
+  height: 32px;
+  border-radius: 16px;
+  float: right;
 }
 
 .switch.track.left{
@@ -201,9 +295,9 @@ h2{
 
 .switch.slider{
   background-color: #CCCCCC;
-  border-radius: 10px;
-  width: 20px;
-  height: 20px;
+  border-radius: 16px;
+  width: 32px;
+  height: 32px;
 }
 
 .switch.slider.left{
@@ -219,7 +313,6 @@ h2{
 .setting.right{
   float: left;
 }
-
 
 /* Everything after this is the loader */
 .cssload-container *, .cssload-container *:before, .cssload-container *:after{
@@ -414,7 +507,7 @@ h2{
 	50% {
 		height: 100%;
 		margin-top: 0;
-		background: rgb(0,167,167);
+		background: rgb(227,172,16);
 	}
 }
 
@@ -422,7 +515,7 @@ h2{
 	50% {
 		height: 100%;
 		margin-top: 0;
-		background: rgb(0,167,167);
+		background: rgb(227,172,16);
 	}
 }
 
@@ -430,7 +523,7 @@ h2{
 	50% {
 		height: 100%;
 		margin-top: 0;
-		background: rgb(0,167,167);
+		background: rgb(227,172,16);
 	}
 }
 
@@ -438,7 +531,7 @@ h2{
 	50% {
 		height: 100%;
 		margin-top: 0;
-		background: rgb(0,167,167);
+		background: rgb(227,172,16);
 	}
 }
 
@@ -446,6 +539,6 @@ h2{
 	50% {
 		height: 100%;
 		margin-top: 0;
-		background: rgb(0,167,167);
+		background: rgb(227,172,16);
 	}
 }

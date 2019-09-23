@@ -21,15 +21,6 @@ import spotipy
 import spotipy.util as util
 from spotipy.oauth2 import SpotifyClientCredentials
 
-# TODO: make "submit" route and API endpoint'''
-#     search endpoint'''
-
-# TODO: remember user votes for next visit'''
-#    rework css so entire td is "up" or "down"'''
-#    in view function, determine which songs the user has voted on'''
-#    apply "up" and "down" classes when rendering template'''
-#    correct displayed vote counts with JS'''
-
 '''# TODO: add "settings" panel on player load'''#Settings panel styling made. Settings not implemented.
 '''#    Don't play explicit songs'''
 '''#    Require CAPTCHA/email to vote'''
@@ -41,8 +32,6 @@ from spotipy.oauth2 import SpotifyClientCredentials
 '''#    modal popup in player (to bypass autoplay blocker)'''
 '''#    suggest Spotify featured playlists, search option'''
 '''#    flexbox playlist image + name/author below, row flex with wrap'''
-
-'''# TODO: "remove song" option in host control panel'''
 
 '''# TODO: Scheduler task queue in mongodb'''
 
@@ -70,7 +59,7 @@ sp.trace = False;
 #Helper Functions
 def newID():
     existing_sessions = [x["publicID"] for x in session_db.find()]
-    adj1 = linecache.getline('other/adjectives.txt', random.randint(1,247)).strip()
+    adj1 = linecache.getline('other/adjectives.txt', random.randint(1,243)).strip()
     # adj1 = adj1.strip() + "-"
     # adj2 = linecache.getline('other/adjectives.txt', random.randint(1,247)).strip()
     # adj2 = adj2.strip() + "-"
@@ -94,6 +83,7 @@ def newID():
     toinsert["lastread"] = now
     toinsert["lastaccessed"] = now
     toinsert["guests"] = []
+    toinsert["settings"] = {"noexplicit": False, "songlimit": False, "voteoff": False, "captcha": False}
     # app.apscheduler.add_job(func=killSession, trigger='date', next_run_time=killtime, args=[toinsert['privateID']], id='close-'+toinsert["publicID"])
     session_db.insert_one(toinsert)
     toinsert.pop("_id")
@@ -241,7 +231,16 @@ def submitredir():
 def api():
     now = int(time.time())
     form = {key:request.form[key] for key in request.form.keys()}
-    authorized_requests = ["newID", "unload", "setlist", "updates", "public", "playnext", "vote", "submit"]
+    authorized_requests = ["newID",
+                           "unload",
+                           "setlist",
+                           "updates",
+                           "public",
+                           "playnext",
+                           "vote",
+                           "submit",
+                           "settings",
+                           "setFallback"]
     if "req" not in form.keys() or form["req"] not in authorized_requests:
         abort(400)
 
@@ -344,41 +343,62 @@ def api():
             entry["upvotes"] = len(entry["upvoters"]) - len(entry["downvoters"])
             setlist_db[publicID].update_one({"_id": entry["_id"]}, {"$set":entry})
         else:
-            return_obj = {"uri": uri, "upvoters":[guestID], "downvoters": [], "played": 0, "upvotes": 1}
+            return_obj = {"uri": uri, "upvoters":[guestID], "downvoters": [], "submitted_by": guestID, "played": 0, "upvotes": 1}
             setlist_db[publicID].insert_one(return_obj)
             return_obj.pop("_id")
         session_db.update_one({"publicID": form["publicID"]}, {"$set":{"lastaccessed": now, "lastmodified":now}})
         # session_db.update_one({"publicID": publicID}, {"$set":{"lastaccessed": now, "lastmodified":now}})
 
-    # print('request:', form)
-    # print("response:", return_obj)
+    if(form["req"] == "settings"):
+        print(str(form), file=sys.stderr)
+        session_info = session_db.find_one({"privateID": form['privateID']},{"_id":0})
+        if(session_info is None):
+            abort(404)
+        settings = {"noexplicit": form["noexplicit"],"songlimit": form["songlimit"],"voteoff": form["voteoff"],"captcha": form["captcha"],}
+        session_db.update_one({"privateID": form["privateID"]}, {"$set":{"lastaccessed": now, "lastmodified":now, "settings": settings}})
+        return_obj = session_db.find_one({"privateID": form['privateID']},{"_id":0})
+        # return_obj.pop("_id")
+    if(form["req"] == "setFallback"):
+        session_info = session_db.find_one({"privateID": form['privateID']},{"_id":0})
+        if(session_info is None):
+            abort(404)
+        setlist_db[session_info['publicID']].delete_many({"submitted_by": "fallback"})
+        to_insert = sp.user_playlist(form["user"], form["uri"])['tracks']['items']
+        to_insert = [{"uri": x['track']['uri'], "upvotes": 0, "submitted_by": "fallback", "upvoters":[], "downvoters":[], "played": 0} for x in to_insert]
+        return_obj = to_insert
+        # print(str(to_insert), file=sys.stderr)
+        setlist_db[session_info['publicID']].insert_many(to_insert)
+        session_db.update_one({"privateID": form["privateID"]}, {"$set":{"lastaccessed": now, "lastmodified":now}})
+
+    print('request:', form, file=sys.stderr)
+    print("response:", return_obj, file=sys.stderr)
     return jsonify(return_obj)
 
 # REMOVE THESE BEFORE LAUNCH
 
-@app.route('/setlist/<string:publicID>')
-def setlist(publicID):
-    setlist = list(setlist_db[publicID].find({},{"_id":0}))
-    if(setlist is None):
-        return(woops(404));
-    else:
-        return jsonify(setlist)
-
-@app.route('/sessions/')
-def sessionlist():
-    sessions = list(session_db.find())
-    if(sessions is None):
-        return(woops(404));
-    else:
-        return jsonify(sessions)
-
-@app.route("/purge/")
-def purgeDB():
-    sess = session_db.find()
-    sess = [x for x in sess] if sess is not None else sess
-    [setlist_db[s["publicID"]].drop() for s in sess]
-    session_db.drop()
-    return jsonify(sess)
+# @app.route('/setlist/<string:publicID>')
+# def setlist(publicID):
+#     setlist = list(setlist_db[publicID].find({},{"_id":0}))
+#     if(setlist is None):
+#         return(woops(404));
+#     else:
+#         return jsonify(setlist)
+#
+# @app.route('/sessions/')
+# def sessionlist():
+#     sessions = list(session_db.find())
+#     if(sessions is None):
+#         return(woops(404));
+#     else:
+#         return jsonify(sessions)
+#
+# @app.route("/purge/")
+# def purgeDB():
+#     sess = session_db.find()
+#     sess = [x for x in sess] if sess is not None else sess
+#     [setlist_db[s["publicID"]].drop() for s in sess]
+#     session_db.drop()
+#     return jsonify(sess)
 
 @app.route("/panic/<int:err>")
 def panic(err):

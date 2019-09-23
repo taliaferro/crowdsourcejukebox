@@ -18,6 +18,17 @@
 			hashobj[kv.split("=")[0].replace("#", "")] = kv.split("=")[1]
 		});
 
+		$.ajax({
+			url: "https://api.spotify.com/v1/me/",
+			type: "GET",
+			beforeSend: function(xhr){xhr.setRequestHeader('Authorization', 'Bearer ' + hashobj.access_token );},
+			success: function(data, status) {
+				// console.log(data);
+				hashobj.id = data.id;
+				hashobj.product = data.product;
+			}
+		});
+
 		var session = {};
 
 		function playSong(uri){
@@ -95,7 +106,40 @@
 			$("#blocker_text").html(message);
 			$("#blocker-icon").show();
 			$("#blocker_text").show();
-			$("#blocker").show();
+			$("#blocker").fadeIn();
+		}
+
+		function updateResults(items){
+			var newtable = "";
+			items.forEach(function(element){
+				newtable += "<tr class = 'track result' data-uri='" + element.uri + "' data-owner='" + element.owner.id + "'>"
+				newtable += "<td class='covericon-cell'>"
+				if(element.images.length != 0){
+					// console.log(element);
+					newtable += "<img class='covericon' src='" + element.images[0].url + "'>"
+				}
+				else{
+					newtable += "<img class='covericon' src='https://www.crowdsourcejukebox.com/content/images/rest.png'>"
+				}
+				newtable += "</td>"
+				newtable += "<td class='trackinfo'><span>"
+				newtable += "<span class='trackinfo-title'>"+element.name+"</span><br>"
+				newtable += "</td>"
+
+				newtable += "</tr>"
+				$("#fallback_results").html(newtable);
+			});
+			$(".result").click(function(){
+				if($(this).hasClass("selected")){
+					$(this).removeClass("selected")
+					selected_playlist = null;
+				}
+				else{
+					$("#fallback_pane .track.selected").removeClass("selected")
+					$(this).addClass("selected")
+					selected_playlist = {uri: $(this).attr("data-uri"), user: $(this).attr("data-owner")}
+				}
+			});
 		}
 
 		window.onSpotifyWebPlaybackSDKReady = () => {
@@ -114,7 +158,7 @@
 		  player.addListener('authentication_error', ({ message }) => {
 				console.error(message);
 				popup("Authentication Error<br>please go back to <a style='text-decoration: underline;' href='https://www.crowdsourcejukebox.com'>the homepage</a><br>to re-authenticate.", "segno");
-				var spotify_auth = "https://accounts.spotify.com/authorize?client_id=e098696a1beb48fb9db404c76148a2f7&redirect_uri=https:%2F%2Fcrowdsourcejukebox.com%2Flisten%2F&scope=user-read-playback-state%20streaming%20user-modify-playback-state%20user-read-private%20user-read-email&response_type=token&state=" + hashobj.state
+				var spotify_auth = "https://accounts.spotify.com/authorize?client_id=e098696a1beb48fb9db404c76148a2f7&redirect_uri=https%3A%2F%2Fwww.crowdsourcejukebox.com%2Flisten%2F&scope=user-read-playback-state%20playlist-read-private%20playlist-read-collaborative%20streaming%20user-modify-playback-state%20user-read-private%20user-read-email&response_type=token&state=" + hashobj.state
 				window.location.replace(spotify_auth);
 			});
 		  player.addListener('account_error', ({ message }) => {
@@ -134,8 +178,10 @@
 				console.log(now_playing.album.images);
 				$("#cover").attr("src", now_playing.album.images[2].url);
 				var name = now_playing.name
-				if(name.length>20){
-					name = name.substring(0, 20).trim() + "..."
+				if(name.length>30){
+					if(name.includes(" - ")){
+						name = name.substring(0, name.indexOf(" - "))
+					}
 				}
 
 				$("#trackname").html(name);
@@ -145,9 +191,20 @@
 		  // Ready
 		  player.addListener('ready', ({ device_id }) => {
 				hashobj["device_id"] = device_id
-				$("#blocker").hide()
-				$(".cssload-container").hide()
-				console.log("ready");
+				$("#blocker_text").fadeOut(500)
+				$(".cssload-container").fadeOut(500, function(){
+					$("#settings_box").fadeIn();
+					$("#fallback_pane").fadeIn();
+					$.ajax({
+						url: "https://api.spotify.com/v1/users/" + hashobj.id + "/playlists?limit=7&",
+						type: "GET",
+						beforeSend: function(xhr){xhr.setRequestHeader('Authorization', 'Bearer ' + hashobj.access_token );},
+						success: function(data, status) {
+							// console.log(data.items)
+							updateResults(data.items)
+						}
+					});
+				});
 				playNext()
 				var url = "https://www.crowdsourcejukebox.com/api/"
 				var data = {req:"public", privateID: hashobj.state}
@@ -196,21 +253,60 @@
 		  player.connect();
 		};
 
-
+		var searchTimeout = null;
+		var selected_playlist = null;
 		$(document).ready(function(){
-			$(".option").click(function(){
-				$(this).find(".switch").toggleClass("left").toggleClass("right")
+			$(".switch_container").click(function(){
+				$(this).find(".slider").toggleClass("left").toggleClass("right")
+				$(this).find(".track").toggleClass("left").toggleClass("right")
 			});
-			// $("#settings_button").click(function(){
-			// 	$("#blocker_text").hide()
-			// 	$("#settings-box").show()
-			// 	$("#blocker").show()
-			// });
-			// $("#save_settings").click(function(){
-			// 	console.log("saved");
-			// 	$("#settings_box").hide()
-			// 	$("#blocker").hide()
-			// });
+			$("#submit_settings").click(function(){
+				request_obj = {"privateID": hashobj.state}
+				if($("#fallback_pane").is(":visible")){
+					request_obj.req = "setFallback";
+					request_obj.user = selected_playlist.user;
+					request_obj.uri = selected_playlist.uri;
+				}
+				else if ($("#switch_pane").is(":visible")) {
+					request_obj.req = "settings"
+					request_obj.noexplicit = $("#noexplicit").hasClass("right")
+					request_obj.songlimit = $("#songlimit").hasClass("right")
+					request_obj.voteoff = $("#voteoff").hasClass("right")
+					request_obj.captcha = $("#captcha").hasClass("right")
+				}
+				console.log(request_obj);
+				var url = "https://www.crowdsourcejukebox.com/api/"
+				var data = request_obj
+				$.post(url, data , function(output, status){
+					console.log(output);
+				});
+				$("#settings_box").fadeOut()
+				$("#switch_pane").fadeOut()
+				$("#fallback_pane").fadeOut()
+				$("#blocker").fadeOut()
+			});
+			$("#settings_button").click(function(){
+				$("#settings_box").fadeIn()
+				$("#switch_pane").fadeIn()
+				$("#blocker").fadeIn()
+			});
+			$("#fallback_search").keyup(function(){
+				if(searchTimeout != null){
+					clearTimeout(searchTimeout);
+				}
+				searchTimeout = setTimeout(function(){
+					$.ajax({
+						url: "https://api.spotify.com/v1/search?q=" + $("#fallback_search").val().replace(" ", "+") + "&type=playlist&limit=7",
+						type: "GET",
+						beforeSend: function(xhr){xhr.setRequestHeader('Authorization', 'Bearer ' + hashobj.access_token );},
+						success: function(data, status) {
+							// console.log(data);
+							updateResults(data.playlists.items)
+						}
+					})
+				},500)
+			});
+
 		});
 
 
@@ -224,7 +320,7 @@
 					<img id="cover" src="https://www.crowdsourcejukebox.com/content/images/rest.png"><br>
 					<span id="trackname">Nothing playing</span><br>
 					<span id="artist">Suggest some songs!</span><br>
-					<span class="button" id="roll">skip ►</span>
+					<span class="button" id="roll">&nbsp&nbsp&nbspskip&nbsp&nbsp&nbsp</span>
 				</div>
 		</div>
 		<div id="setlist">
@@ -238,7 +334,7 @@
 				<img id="code" src=""><br>
 				<h2 class="vote_header">what do you want to hear next?</h2>
 				<h2 class="vote_header"id="voteurl"></h2>
-				<!-- <h2 class="button" id="settings_button">Settings</h2> -->
+				<span class="button" id="settings_button">&nbsp&nbsp&nbspsettings&nbsp&nbsp&nbsp</span>
 			</div>
 		</div>
 	</div>
@@ -257,21 +353,37 @@
 				<div class="cssload-shaft9"></div>
 				<div class="cssload-shaft10"></div>
 			</div>
-			<h2 id="blocker_text">Loading Web Player</h2>
-			<!-- <div style="display: none" id="settings-box">
-				<table id="settings">
-					<tr><td colspan="3"><h2>Settings</h2></td></tr>
-					<tr><td class="settingname" colspan="3">Block explicit songs</td></tr>
-					<tr class="option"><td class="option left">Off</td><td class="switch track left"><div class="switch slider left"></div></td><td class="option right">On</td></tr>
-					<tr><td class="settingname" colspan="3">Require Captcha to vote</td></tr>
-					<tr class="option"><td class="option left">Off</td><td class="switch track left"><div class="switch slider left"></div></td><td class="option right">On</td></tr>
-					<tr><td class="settingname" colspan="3">Vote imagecode</td></tr>
-					<tr class="option"><td class="option left">QR code</td><td class="switch track left"><div class="switch slider left"></div></td><td class="option right">Snapcode</td></tr>
-					<tr><td class="settingname" colspan="3">Upvote threhold to play</td></tr>
-					<tr><td colspan="3"><input placeholder="1" style="color: black; width: 25%;" type="text"></td></tr>
-					<tr><td colspan="3"><div id="save_settings" class="button">Save</div></td></tr>
-				</table>
-			</div> -->
+			<h2 id="blocker_text">loading web player...</h2>
+			<div style = "display: none;"id="settings_box">
+				<div id="switch_pane" style="display: none;">
+					<h2>settings:</h2>
+					<table>
+						<tbody>
+							<tr>
+								<td class="switch label">forbid explicit songs</td><td class="switch_container"><div class="switch track left"><div id="noexplicit" class="switch slider left"></div></div></td>
+							</tr>
+							<tr>
+								<td class="switch label">one song per guest on the list</td><td class="switch_container"><div class="switch track left"><div id="songlimit" class="switch slider left"></div></div></td>
+							</tr>
+							<tr>
+								<td class="switch label">remove songs nobody wants</td><td class="switch_container"><div class="switch track left"><div id="voteoff"  class="switch slider left"></div></div></td>
+							</tr>
+							<tr>
+								<td class="switch label">require captcha to vote</td><td class="switch_container"><div class="switch track left"><div id="captcha" class="switch slider left"></div></div></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<div id="fallback_pane" style="display: none;">
+					<h2>pick a fallback playlist:</h2>
+					<input type="text" id="fallback_search" placeholder="ex. party, jazz, gorillaz">
+					<table id="fallback_results">
+					</table>
+				</div>
+				<div style="text-align: center; width: 100%;">
+					<span class="button" id="submit_settings">&nbsp&nbsp&nbspok&nbsp&nbsp&nbsp</span>
+				</div>
+			</div>
 		</div>
 	</div>
 </body>

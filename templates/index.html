@@ -11,7 +11,7 @@
 	<script src="https://kit.fontawesome.com/263f47cf9d.js" crossorigin="anonymous"></script>
 	<script>
 		var id = {{init_id|safe}}
-		var spotify_url = "https://accounts.spotify.com/authorize?client_id=e098696a1beb48fb9db404c76148a2f7&redirect_uri=https%3A%2F%2Fwww.crowdsourcejukebox.com%2Flisten%2F&scope=user-read-playback-state%20streaming%20user-modify-playback-state%20user-read-private%20user-read-email&response_type=token&state="
+		var spotify_url = "https://accounts.spotify.com/authorize?client_id=e098696a1beb48fb9db404c76148a2f7&redirect_uri=https%3A%2F%2Fwww.crowdsourcejukebox.com%2Flisten%2F&scope=user-read-playback-state%20playlist-read-private%20playlist-read-collaborative%20streaming%20user-modify-playback-state%20user-read-private%20user-read-email&response_type=token&state="
 		$(document).ready(function(){
 			$("#sessionID").html(id.display)
 			$("#auth").attr("href", spotify_url + id.privateID)
@@ -27,6 +27,10 @@
 			$("#reroll").click(function(){
 				var url = "https://www.crowdsourcejukebox.com/api/"
 				var data = {req:"newID", oldID: id.privateID}
+				$("#reroll i").addClass("fast-spin")
+				setTimeout(function(){
+					$("#reroll i").removeClass("fast-spin")
+				}, 300)
 				$.post(url, data , function(data, status){
 						id = data
 						$("#sessionID").html(data.display)
