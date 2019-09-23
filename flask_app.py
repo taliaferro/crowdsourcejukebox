@@ -141,7 +141,13 @@ def vote(publicID):
     current_playlist = list(setlist_db[publicID].find({"played": 0}, {"_id":0}).sort("upvotes", -1))
 
     if current_playlist != []:
-        tracks = sp.tracks([x["uri"] for x in current_playlist])["tracks"]
+        tmp_playlist = current_playlist
+        tracks = []
+        while(len(tmp_playlist)>=50):
+            tracks += sp.tracks([x["uri"] for x in tmp_playlist[:50]])["tracks"]
+            tmp_playlist = tmp_playlist[50:]
+        tracks += sp.tracks([x["uri"] for x in tmp_playlist])["tracks"]
+
         for t in range(len(tracks)):
             curr_track = current_playlist[t]
             if publicID + "-guest" in request.cookies:
