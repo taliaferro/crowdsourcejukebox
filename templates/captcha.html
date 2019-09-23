@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Crowdsource Jukebox</title>
+	<script src='https://www.google.com/recaptcha/api.js'></script>
+	<script type="text/javascript">
+	  var onloadCallback = function() {
+	     document.getElementById("captcha_form").submit();
+	  };
+	</script>
+	<style>
+	</style>
+</head>
+<body style="background-color: #003b3b">
+	<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 85vh;">
+		<div>
+			<form id="captcha_form" method="post">
+				<div class="g-recaptcha" data-size="compact" style="transform:scale(2.5);-webkit-transform:scale(2.5);" data-sitekey="{{sitekey}}" data-callback = "onloadCallback" async defer></div>
+			</form>
+		</div>
+	</div>
+</body>
+</html>

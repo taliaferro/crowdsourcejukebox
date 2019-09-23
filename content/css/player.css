@@ -95,11 +95,6 @@ a{
   border-radius: 8px;
 }
 
-.button:hover{
-  border: 2px solid #e3ac10;
-  /* font-size: 30px; */
-}
-
 #md_window{
   width: 100%;
 }

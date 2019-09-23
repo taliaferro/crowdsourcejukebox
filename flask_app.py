@@ -12,6 +12,7 @@ import urllib.parse
 from flask import Flask, send_file, render_template, abort, jsonify, redirect, request, make_response
 from itsdangerous import Signer
 from werkzeug.exceptions import HTTPException
+import requests
 
 import pymongo
 from flask_pymongo import PyMongo
@@ -109,25 +110,12 @@ def killHard(id):
 
 #App Config
 app = Flask(__name__)
-# scheduler = APScheduler()
-# scheduler.init_app(app)
-# scheduler.start()
 
 flaskpymongo=PyMongo(app, uri=os.environ["MONGO_URI"])
 mclient = flaskpymongo.cx
 setlist_db = mclient["setlists"]
 session_db = mclient["meta"]["sessions"]
-# session_db.insert_one({"key": "val"})
-# with open("logs.txt", "a") as logfile:
-#     # logfile.write("mclient.list_databases()")
-#     logfile.write(str(list(mclient.list_databases())))
 
-# @app.route("/favicon.ico")
-# def favicon():
-#     return redirect("http://www.crowdsourcejukebox.com/content/images/favicon.ico"), 301
-#
-# # Flask Pages Begin Here
-#
 @app.route("/")
 def home():
     init_id = newID()
@@ -146,16 +134,11 @@ def voteredir():
 def vote(publicID):
     publicID = publicID.lower();
     now = int(time.time())
-    if(publicID == "vote"):
-        return redirect("https://www.crowdsourcejukebox.com/")
     session_info = session_db.find_one({"publicID": publicID},{"_id":0})
     if session_info is None:
         abort(404)
     session_db.update_one({"publicID": publicID}, {"$set":{"lastaccessed": now, "lastread":now}})
     current_playlist = list(setlist_db[publicID].find({"played": 0}, {"_id":0}).sort("upvotes", -1))
-
-    # print(publicID + "-guest")
-    # print(current_playlist)
 
     if current_playlist != []:
         tracks = sp.tracks([x["uri"] for x in current_playlist])["tracks"]
@@ -178,11 +161,15 @@ def vote(publicID):
             curr_track["artist"] = tracks[t]["artists"][0]["name"]
     resp =  make_response(render_template("vote.html", publicID=publicID, tracks = current_playlist))
     hancock = Signer(str(secret_key), salt=str(session_info['privateID']))
+
     if(publicID + "-guest") not in request.cookies:
-        guestID = bytes(str(uuid.uuid4()), "utf-8")
-        resp.set_cookie(publicID + "-guest",
-                        value=hancock.sign(guestID),
-                        expires=datetime.datetime.now() + datetime.timedelta(hours=1))
+        if(session_info['settings']["captcha"]):
+            return redirect("https://www.crowdsourcejukebox.com/captcha/"+publicID+"/")
+        else:
+            guestID = bytes(str(uuid.uuid4()), "utf-8")
+            resp.set_cookie(publicID + "-guest",
+                            value=hancock.sign(guestID),
+                            expires=datetime.datetime.now() + datetime.timedelta(hours=1))
     else:
         if(not hancock.validate(request.cookies.get(publicID + "-guest"))):
             abort(401)
@@ -199,7 +186,7 @@ def search(publicID):
     session_db.update_one({"publicID": publicID}, {"$set":{"lastaccessed": now, "lastread":now}})
     hancock = Signer(secret_key, salt=session_info['privateID'])
     if(publicID + "-guest") not in request.cookies:
-        return redirect("http://csjb.cc/" + publicID)
+        return redirect("http://www.csjb.cc/" + publicID)
     else:
         if(not hancock.validate(request.cookies.get(publicID + "-guest"))):
             abort(401)
@@ -224,6 +211,42 @@ def search(publicID):
 @app.route("/submit/")
 def submitredir():
     return redirect("http://www.crowdsourcejukebox.com/"), 301
+
+def is_human(captcha_response):
+    """ Validating recaptcha response from google server
+        Returns True captcha test passed for submitted form else returns False.
+    """
+    secret = os.environ["RC_SECRET_KEY"]
+    payload = {'response':captcha_response, 'secret':secret}
+    response = requests.post("https://www.google.com/recaptcha/api/siteverify", payload)
+    response_text = json.loads(response.text)
+    # print(response.text, file=sys.stderr)
+    return response_text['success']
+
+@app.route("/captcha/<string:publicID>/", methods=["POST", "GET"])
+def captcha(publicID):
+    publicID = publicID.lower()
+
+    session_info = session_db.find_one({"publicID": publicID},{"_id":0})
+    hancock = Signer(str(secret_key), salt=str(session_info['privateID']))
+
+    if(publicID + "-guest") in request.cookies and hancock.validate(request.cookies.get(publicID + "-guest")):
+        return redirect("https://www.crowdsourcejukebox.com/vote/" + publicID + "/")
+
+    if request.method == "POST":
+        captcha_response = request.form['g-recaptcha-response']
+        if is_human(captcha_response):
+            resp = make_response(redirect("https://www.crowdsourcejukebox.com/vote/" + publicID + "/"))
+            guestID = bytes(str(uuid.uuid4()), "utf-8")
+            resp.set_cookie(publicID + "-guest",
+                            value=hancock.sign(guestID),
+                            expires=datetime.datetime.now() + datetime.timedelta(hours=1))
+            return resp
+        else:
+            return redirect("http://www.crowdsourcejukebox.com/")
+    else:
+        return render_template("captcha.html", sitekey = os.environ["RC_SITE_KEY"])
+
 
 # UTILITY ROUTES
 
@@ -257,7 +280,7 @@ def api():
             past_played = [x for x in setlist_db[publicID].find({"played": 1},{"_id":0})]
             top_played = sorted(past_played, reverse=True, key = lambda i: i["upvotes"])
             if(len(top_played)>20):
-                top_played = top_played[:len(top_played)/2]
+                top_played = top_played[:int(len(top_played)/2)]
             seeds = []
             for i in range(4):
                 seeds.append(top_played.pop(random.randint(0,len(top_played)-1))["uri"])
@@ -370,8 +393,8 @@ def api():
         setlist_db[session_info['publicID']].insert_many(to_insert)
         session_db.update_one({"privateID": form["privateID"]}, {"$set":{"lastaccessed": now, "lastmodified":now}})
 
-    print('request:', form, file=sys.stderr)
-    print("response:", return_obj, file=sys.stderr)
+    # print('request:', form, file=sys.stderr)
+    # print("response:", return_obj, file=sys.stderr)
     return jsonify(return_obj)
 
 # REMOVE THESE BEFORE LAUNCH
