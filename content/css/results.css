@@ -84,6 +84,7 @@ h2{
 #results tr{
   background-color: rgba(40,40,40,0.7);
   width: 100%;
+  cursor: pointer;
 }
 .trackcell{
   padding: 20px;
@@ -141,6 +142,7 @@ h2{
   flex-direction: column;
   align-items: center;
   justify-content: space-around;
+  border-radius: 20px;
 }
 
 #submit_header{
@@ -175,10 +177,14 @@ h2{
   color: white;
   padding-left: 15px;
   padding-right: 15px;
+  border-radius: 10px;
+  cursor: pointer;
 }
 #button_yes{
   border: 4px solid #e3ac10;
   background-color: #e3ac10;
   padding-left: 15px;
   padding-right: 15px;
+  border-radius: 10px;
+  cursor: pointer;
 }

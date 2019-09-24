@@ -20,5 +20,20 @@ lang="en"<!DOCTYPE html>
 			<button type="submit"><span>search➲</span></button>
 		</form>
 	</div>
+	{% if wait %}
+	<div class="blocker">
+		<div class="modal">
+			<h2>
+				your host only allows one song per person,<br>
+				and you already have a song in the queue.<br><br>
+				you can remove your song from the list by<br>
+				giving it a "thumbs down".<br><br>
+				you can still vote on songs, or<br>
+				come back when your song gets played.<br>
+			</h2>
+			<a href="https://www.crowdsourcejukebox.com/vote/{{publicID}}/"><span id="button_back">back</div></a>
+		</div>
+	</div>
+	{% endif %}
 </body>
 </html>

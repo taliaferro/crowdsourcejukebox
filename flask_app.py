@@ -198,6 +198,9 @@ def search(publicID):
     else:
         if(not hancock.validate(request.cookies.get(publicID + "-guest"))):
             abort(401)
+    if session_info["settings"]["songlimit"] and setlist_db[publicID].find_one({"played": 0, "submitted_by": request.cookies.get(publicID + "-guest")}) is not None:
+        print("got one", file=sys.stderr)
+        return render_template("search.html", publicID=publicID, wait=True)
 
     query = request.query_string.decode("UTF-8")
     if(query != "" and "query=" in query):
@@ -205,7 +208,7 @@ def search(publicID):
         query = query[query.index('=')+1:]
         query = query if "&" not in query else query[:query.index("&")]
         if(query == ""):
-            return render_template("search.html", publicID=publicID)
+            return render_template("search.html", publicID=publicID, wait=False)
         query = urllib.parse.unquote_plus(query)
         results = sp.search(query, limit=35)["tracks"]["items"]
         if(session_info["settings"]["noexplicit"]):
@@ -216,7 +219,7 @@ def search(publicID):
                    "artist": result["artists"][0]["name"]} for result in results]
         return render_template("results.html", tracks = tracks, publicID = publicID, prev_query = query)
     else:
-        return render_template("search.html", publicID=publicID)
+        return render_template("search.html", publicID=publicID, wait=False)
 
 @app.route("/submit/")
 def submitredir():
@@ -373,6 +376,8 @@ def api():
             abort(401)
         publicID = form["publicID"]
         uri = form["uri"]
+        if setlist_db[publicID].find_one({"played": 0, "submitted_by": guestID}) is not None:
+            abort(403)
         entry = setlist_db[publicID].find_one({"played": 0, "uri": uri})
         if(entry is not None): #if the song is already in the setlist:
             entry["upvoters"] = [] if "upvoters" not in entry.keys() else entry["upvoters"]

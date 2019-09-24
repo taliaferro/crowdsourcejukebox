@@ -79,3 +79,35 @@ button span, button i{
   font-size: 3.25em;
   flex: 1;
 }
+
+.blocker{
+  position: fixed;
+  top: 0;
+  left: 0;
+  text-align: center;
+  height: 100vh;
+  width: 100vw;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.modal{
+  background-color: #282828;
+  border-radius: 20px;
+  padding: 20px;
+}
+.modal h2, .modal span{
+  font-weight: 500;
+  font-size: 2.5em;
+  margin-top: 30px;
+}
+#button_back{
+  border: 4px solid #e3ac10;
+  background-color: #e3ac10;
+  padding-left: 15px;
+  padding-right: 15px;
+  border-radius: 10px;
+  cursor: pointer;
+}
