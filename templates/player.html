@@ -4,12 +4,17 @@
 <meta charset="UTF-8">
 
 <head>
+	<meta name="robots" content="noindex, nofollow" />
+	<meta name="author" content="James Taliaferro">
+
 	<title>Crowdsource Jukebox</title>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 	<script src="https://sdk.scdn.co/spotify-player.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
 
 	<link href="https://www.crowdsourcejukebox.com/content/css/player.css" rel="stylesheet">
 	<link href="https://fonts.googleapis.com/css?family=Red+Hat+Text:400,400i,500,700&display=swap&subset=latin-ext" rel="stylesheet">
+
 
 	<script>
 		var hashlist = window.location.hash.split("&")
@@ -167,7 +172,7 @@
 			});
 		  player.addListener('playback_error', ({ message }) => {
 				console.error(message);
-				popup("Playback Error<br>Please reload the page, that might help.", "fermata");
+				popup("Playback Error<br>Please reload the page, that might help.<br>If you're using Brave, please switch to Chrome or Firefox.<br>(Sorry about that. Blame Spotify.)", "fermata");
 			});
 
 		  // Playback status updates

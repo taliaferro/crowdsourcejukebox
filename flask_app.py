@@ -8,11 +8,11 @@ import uuid
 import os
 import sys
 import urllib.parse
+import requests
 
 from flask import Flask, send_file, render_template, abort, jsonify, redirect, request, make_response
 from itsdangerous import Signer
 from werkzeug.exceptions import HTTPException
-import requests
 
 import pymongo
 from flask_pymongo import PyMongo

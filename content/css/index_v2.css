@@ -83,6 +83,11 @@ a{
     color: #282828;
 }
 
+#about{
+  font-size: 1.2em;
+  width: 90%;
+}
+
 .fast-spin {
   -webkit-animation: spin-counter .3s infinite linear;
   -moz-animation: spin-counter .3s infinite linear;
