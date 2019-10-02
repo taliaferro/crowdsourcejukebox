@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="UTF-8">
+
+<head>
+	<title>Crowdsource Jukebox</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+	<link href="https://www.crowdsourcejukebox.com/content/css/index_v2.css" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css?family=Red+Hat+Text:400,400i,500,700&display=swap&subset=latin-ext" rel="stylesheet">
+</head>
+<body>
+	<div id = 'content' style="display: block; height: unset;">
+		<div style="width: 90%; font-size: 1.2em;">
+			<div style="width: 100%; text-align: center;">
+				<a href="https://www.crowdsourcejukebox.com/">
+					<img id = "logo" alt="Crowdsource Jukebox Logo" style="cursor: pointer;" src="https://www.crowdsourcejukebox.com/content/images/lockupcolor.png">
+				</a>
+			</div>
+			<br>
+			<h1>About Crowdsource Jukebox</h1>
+			<br>
+			<h2>What is it?</h2>
+			<p>&nbsp&nbsp&nbsp&nbsp&nbspCrowdsource Jukebox is a webapp that lets you put your party playlist in the hands of the people. Using Crowdsource Jukebox, you can let everybody in the room vote on what songs they want to hear next using their phones, without having to install an app or create an account. It was created by computer science student James Taliaferro in summer 2019.</p>
+			<br>
+			<h2>How do I use it?</h2>
+			<p>&nbsp&nbsp&nbsp&nbsp&nbspFirst, put your computer in a place where all your guests can see and hear it. If you can, you might want to connect it to your TV.
+				<br>Next, click the button with your party name on it until you get one you're happy with, and then click on "start" to log in with your Spotify Premium account.
+				<br>NOTE: Spotify Free accounts are not currently supported. I'm working on it, but I can't make any promises.
+				<br>
+				<br>Once logged in, pick one of the suggested playlists, or use the search bar to find another one. This is your "fallback playlist." When your guests haven't suggested any songs, the player will default to this playlist.
+				<br>On the left, you should see the currently playing track, with a button to skip the current track. In the center, there's a list of songs coming up next. On the right is a QR code, and a link to the same destination as the code--this is how users will interact with your playlist.
+				<br>
+				<br>When your guests scan the code or visit the site, they'll be greeted by a simple mobile web interface, showing a list of songs in the queue and a number of upvotes each track is. Tapping on the thumbs-up and thumbs-down icons on a track will adjust its ranking in the queue.
+				<br>If a guest taps the "plus" button in the bottom right, they will be taken to a search bar. In the results page for that search bar, tapping on any track will give the user an expanded view of the track and the option to submit the track.
+				<br>As soon as a song is submitted by a user, it will appear in the queue with one upvote.
+				<br>
+				<br>Also in the right pane of the player, the button labeled "settings" gives you as the host some control over whaat gets submitted.
+				<br>"forbid explicit songs" filters any song with explicit content from the fallback playlist and the guests' search results, and removes any explicit songs from the queue.
+				<br>"one song per guest on the list" makes sure your users can only put one song in the queue.
+				<br>"remove unpopular songs" drops a song from the list if a large majority of your guests downvote it.
+				<br>"require captcha to vote" redirects your users to a <a href="https://www.google.com/recaptcha" style="text-decoration: underline;">reCaptcha</a> page (the "I'm not a robot" checkbox) before they are allowed to vote or submit a song.
+			</p>
+			<br>
+			<h2>FAQ</h2>
+			<h3>Why do I need a Spotify Premium account?</h3>
+			<p>Short answer: Blame Spotify.
+				<br>The tool Crowdsource Jukebox uses to play Spotify songs through other webpages (like our player) only works for Spotify Premium accounts.
+				<br>I'm working on a way of selecting what device to play through, so you could use Crowdsource Jukebox to control playback on your phone or smart TV, but it's not ready yet.
+			</p>
+			<br>
+			<h3>Why doesn't the player work in Brave?</h3>
+			<p>Short answer: Blame Spotify again.
+				<br>The Web Playback SDK just doesn't work on Brave; even Spotify's own web player doesn't work.
+			</p>
+			<br>
+			<h3>What information do you store about me?</h3>
+			<p>None; zip, zilch, zero. I care about privacy and I wanted to make sure I didn't collect any data I didn't need.
+			</p>
+			<br>
+			<h3>Do you use cookies?</h3>
+			<p>Spotify uses some to keep track of your login. We don't use any in the player, but in the voting page your guests get a cookie to identify them. This is to make sure guests only vote once per song, and to enforce the "captcha to vote" and "one song per guest" policies. The cookie expires after 24 hours and we don't use it to track you outside our site.
+			</p>
+			<br>
+			<h3>Can you add X feature or fix Y bug?</h3>
+			<p>I'll do my best. Submit a bug report on <a href="https://github.com/JamesTaliaferro/crowdsourcejukebox" style="text-decoration: underline;">the GitHub repo</a> and I'll see what I can do.
+			</p>
+			<br>
+			<h2>What's under the hood?</h2>
+			<p>If you speak Python and JavaScript, all the source code for the site is available on <a href="https://github.com/JamesTaliaferro/crowdsourcejukebox" style="text-decoration: underline;">my GitHub.</a>
+			<br>If not, no problem! Here's a broad overview.
+			<br><br>
+			Crowdsource Jukebox is hosted by <a href="https://pythonanywhere.com/" style="text-decoration: underline;">PythonAnywhere</a>, who provide more or less batteries-included web hosting for sites built on Python web frameworks. My framework of choice is Flask; I find its no-frills, modular approach very appealing. Flask acts as the backend for the whole site.
+			<br><br>
+			The backend maintains a database of sessions, as well as a collection in the database to keep track of the setlist for each session.The database is managed by <a href="https://www.mongodb.com/cloud/atlas" style="text-decoration: underline;">MongoDB Atlas</a>, a managed Database as a Service provider that uses the MongoDB database platform.
+			<br><br>The Player view is totally static from the perspective of the backend; everything you see is caused by JS on the client side. This is a result of the way Spotify's authorization scheme works; the simplest way to get an API access token for a user is to keep all the API interactions for that user on the client side, through the "implicit grant" OAuth flow. Every five seconds, the player checks in with the server asking for updates to the setlist. (In the long run, I'm looking into a way to do this with WebSockets, Server-Sent Events or long-polling.) If there are updates, it contacts the Spotify API to ask for detailed track information. (my database only stores the Spotify URI of the songs in the queue.)
+			<br>When the player detects that it is out of songs (the player state has just changed, it's paused, and the current position in the track is 0,) it requests the next song from my API; when this happens, the backend returns the next song and marks it as played within the database. If there are no songs in the queue, the backend instead generates a new recommended song based on the most upvoted songs that were already played.
+			<br>All of the player's interactions with the backend are authorized by a unique, private session ID which is not visible to users.
+			<br><br>In the guest endpoints, requests are authorized by a unique cookie attached to every request, which is signed by the server and salted with the session ID. This means that I never keep a database of users, but I can check that a user has been authorized (through the Captcha view, for example). Each vote up or down makes a request to the backend to adjust the vote tally, and the submit endpoint makes a similar request to insert a new song. Each endpoint runs additional checks to comply with the submission policies of the player.
+			<br>The frontend is built with only HTML/CSS/JS and jQuery, which gives me a great deal of customization over the style of the page that other frontend frameworks might not offer.
+			<br><br>
+			If you like what you see, and you need a software engineering intern in the summer of 2020, I'm in the process of job-hunting. Feel free to  <a style="text-decoration: underline;" href="mailto://taliaferro@pm.me">reach out!</a>
+			</p>
+		</div>
+	</div>
+</body>
+</html>

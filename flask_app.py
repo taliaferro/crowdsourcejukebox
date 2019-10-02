@@ -122,6 +122,10 @@ def home():
     # return jsonify(init_id)
     return render_template("index.html", init_id = json.dumps(init_id))
 
+@app.route("/about/")
+def about():
+    return render_template("about.html")
+
 @app.route('/listen/')
 def player():
     return render_template("player.html")
@@ -362,7 +366,7 @@ def api():
         entry["upvotes"] = len(entry["upvoters"]) - len(entry["downvoters"])
         # print(entry["upvoters"])
         # print(entry["downvoters"])
-        if len(entry["downvoters"]) > int(0.6 * session_info["guests"]):
+        if len(entry["downvoters"]) > int(0.6 * session_info["guests"]) or (direction == "down" and guestID == entry["submitted_by"]):
              setlist_db[publicID].delete_one({"_id": entry["_id"]})
         else:
             setlist_db[publicID].update_one({"_id": entry["_id"]}, {"$set":entry})
