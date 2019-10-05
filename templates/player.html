@@ -96,12 +96,21 @@
 
 							newtable += "</tr>"
 							$("#setlist_table").html(newtable);
+							$(".trackinfo-title").each(function(){
+								while($(this).height() >= (1.5 * Number($(this).css("line-height").replace("px", "")))){
+									$(this).html(ellipsize($(this).html()))
+								}
+							})
 							$("#setlist_table").show();
 							return
 						});
 					}
 				});
 			});
+		}
+
+		function ellipsize(text){
+			return text.split(" ").slice(0, -1).join(" ").concat("...")
 		}
 
 		function popup(message, img){
