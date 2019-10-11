@@ -205,21 +205,33 @@
 		  // Ready
 		  player.addListener('ready', ({ device_id }) => {
 				hashobj["device_id"] = device_id
-				$("#blocker_text").fadeOut(500)
-				$(".cssload-container").fadeOut(500, function(){
-					$("#settings_box").fadeIn();
-					$("#fallback_pane").fadeIn();
-					$.ajax({
-						url: "https://api.spotify.com/v1/users/" + hashobj.id + "/playlists?limit=7&",
-						type: "GET",
-						beforeSend: function(xhr){xhr.setRequestHeader('Authorization', 'Bearer ' + hashobj.access_token );},
-						success: function(data, status) {
-							// console.log(data.items)
-							updateResults(data.items)
+				$.ajax({
+					url: "https://api.spotify.com/v1/me",
+					type: "GET",
+					beforeSend: function(xhr){xhr.setRequestHeader('Authorization', 'Bearer ' + hashobj.access_token );},
+					success: function(data, status) {
+						if(data.product != "premium"){
+							popup("You need a Spotify Premium account to use this right now.<br>We're working on it.", "fine")
 						}
-					});
-				});
-				playNext()
+						else{
+							$("#blocker_text").fadeOut(500)
+							$(".cssload-container").fadeOut(500, function(){
+								$("#settings_box").fadeIn();
+								$("#fallback_pane").fadeIn();
+								$.ajax({
+									url: "https://api.spotify.com/v1/users/" + hashobj.id + "/playlists?limit=7&",
+									type: "GET",
+									beforeSend: function(xhr){xhr.setRequestHeader('Authorization', 'Bearer ' + hashobj.access_token );},
+									success: function(data, status) {
+										// console.log(data.items)
+										updateResults(data.items)
+									}
+								});
+							});
+							playNext()
+						}
+					}
+				})
 				var url = "https://www.crowdsourcejukebox.com/api/"
 				var data = {req:"public", privateID: hashobj.state}
 				$.post(url, data , function(output, status){
@@ -304,6 +316,7 @@
 				$("#switch_pane").fadeIn()
 				$("#blocker").fadeIn()
 			});
+
 			$("#fallback_search").keyup(function(){
 				if(searchTimeout != null){
 					clearTimeout(searchTimeout);
