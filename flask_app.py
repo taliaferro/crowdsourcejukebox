@@ -53,6 +53,7 @@ from spotipy.oauth2 import SpotifyClientCredentials
 # GLOBALS:
 site_location = "http://www.crowdsourcejukebox.com/"
 inactive_timeout = 5  # minutes before an inactive client expires
+INACTIVE_TIMEOUT =  5 # minutes
 
 # itsdangerous signer
 secret_key = os.environ["SIGNER_KEY"]
@@ -339,6 +340,7 @@ def captcha(publicID):
 @app.route("/api/", methods=["POST"])
 def api():
     now = int(time.time())
+
     form = {key: request.form[key] for key in request.form.keys()}
     authorized_requests = [
         "newID",
@@ -358,6 +360,16 @@ def api():
     print("request:", form, file=sys.stderr)
     return_obj = {}
     if form["req"] == "newID":
+        setlists = setlist_db.list_collection_names()
+        to_drop = session_db.find({"lastaccessed":{"$lt": now - (60*INACTIVE_TIMEOUT)}})
+        to_drop = [s["publicID"] for s in to_drop]
+        if to_drop != []:
+            print(to_drop, flush=True)
+            for s in to_drop:
+                if s in setlists:
+                    setlist_db[s].drop()
+        session_db.delete_many({"lastaccessed":{"$lt": now - (60*INACTIVE_TIMEOUT)}})
+
         return_obj = newID()
         killSession(form["oldID"], hard=True)
     if form["req"] == "unload":
